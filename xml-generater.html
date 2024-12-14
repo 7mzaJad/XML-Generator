@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PharmaLeaf - Generate XML</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to bottom, #e0f7fa, #b2ebf2);
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        h1 {
+            color: #00796b;
+            text-shadow: 1px 1px 2px #aaa;
+        }
+        label {
+            font-size: 18px;
+            color: #00796b;
+        }
+        textarea {
+            border: 2px solid #00796b;
+            border-radius: 8px;
+            padding: 12px;
+            width: 80%;
+            max-width: 600px;
+            font-size: 16px;
+            background-color: #f1f8e9;
+        }
+        button {
+            background-color: #00796b;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 25px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        button:hover {
+            background-color: #004d40;
+            transform: scale(1.05);
+        }
+        footer {
+            margin-top: 30px;
+            font-size: 14px;
+            color: #555;
+        }
+        footer p {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>PharmaLeaf - Generate XML File</h1>
+    <label for="textBox">Enter Pharmaceutical Content:</label>
+    <textarea id="textBox" rows="10" cols="50" placeholder="Type your text here..."></textarea>
+    <br>
+    <button id="generateBtn">Generate XML</button>
+
+    <footer>
+        <p>Digitizing pharmaceutical data for better compliance and efficiency. &#x1F4D6;</p>
+    </footer>
+
+    <script>
+        // Function to generate and download XML
+        document.getElementById('generateBtn').addEventListener('click', function() {
+            const textBox = document.getElementById('textBox').value;
+
+            if (!textBox.trim()) {
+                alert('Text box is empty! Please enter some text.');
+                return;
+            }
+
+            // Create an XML structure
+            const xmlContent = `<?xml version="1.0" encoding="UTF-8"?>\n<root>\n    <content>${escapeXml(textBox)}</content>\n</root>`;
+
+            // Create a Blob from the XML content
+            const blob = new Blob([xmlContent], { type: 'application/xml' });
+
+            // Create a download link
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'generated.xml';
+            link.click();
+
+            // Clean up
+            URL.revokeObjectURL(link.href);
+        });
+
+        // Escape XML special characters
+        function escapeXml(unsafe) {
+            return unsafe.replace(/[<>&'"']/g, function (c) {
+                switch (c) {
+                    case '<': return '&lt;';
+                    case '>': return '&gt;';
+                    case '&': return '&amp;';
+                    case '"': return '&quot;';
+                    case "'": return '&apos;';
+                }
+            });
+        }
+
+        // Add a console log for no reason
+        console.log("PharmaLeaf - XML generator ready!");
+    </script>
+</body>
+</html>
