@@ -25,7 +25,7 @@
             font-size: 18px;
             color: #00796b;
         }
-        textarea {
+        .editor {
             border: 2px solid #00796b;
             border-radius: 8px;
             padding: 12px;
@@ -33,6 +33,25 @@
             max-width: 600px;
             font-size: 16px;
             background-color: #f1f8e9;
+            min-height: 200px;
+            white-space: pre-wrap;
+            overflow-wrap: break-word;
+        }
+        .toolbar {
+            margin-bottom: 10px;
+        }
+        .toolbar button, .toolbar input {
+            background-color: #00796b;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 15px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+        .toolbar button:hover, .toolbar input:hover {
+            background-color: #004d40;
         }
         button {
             background-color: #00796b;
@@ -62,8 +81,25 @@
 </head>
 <body>
     <h1>PharmaLeaf - Generate XML File</h1>
-    <label for="textBox">Enter Pharmaceutical Content:</label>
-    <textarea id="textBox" rows="10" cols="50" placeholder="Type your text here..."></textarea>
+    <div class="toolbar">
+        <button onclick="document.execCommand('bold')">Bold</button>
+        <button onclick="document.execCommand('italic')">Italic</button>
+        <button onclick="document.execCommand('underline')">Underline</button>
+        
+        <!-- Color picker for text color -->
+        <input type="color" id="colorPicker" onchange="changeTextColor(event)" title="Pick a Text Color">
+        
+        <!-- List options -->
+        <button onclick="document.execCommand('insertOrderedList')">Ordered List</button>
+        <button onclick="document.execCommand('insertUnorderedList')">Unordered List</button>
+        
+        <!-- Table Insert -->
+        <button onclick="insertTable()">Insert Table</button>
+    </div>
+
+    <label for="editor">Enter Pharmaceutical Content:</label>
+    <div id="editor" class="editor" contenteditable="true" placeholder="Type your text here..."></div>
+
     <br>
     <button id="generateBtn">Generate XML</button>
 
@@ -74,15 +110,16 @@
     <script>
         // Function to generate and download XML
         document.getElementById('generateBtn').addEventListener('click', function() {
-            const textBox = document.getElementById('textBox').value;
+            const editor = document.getElementById('editor');
+            const htmlContent = editor.innerHTML;
 
-            if (!textBox.trim()) {
+            if (!htmlContent.trim()) {
                 alert('Text box is empty! Please enter some text.');
                 return;
             }
 
-            // Create an XML structure
-            const xmlContent = `<?xml version="1.0" encoding="UTF-8"?>\n<root>\n    <content>${escapeXml(textBox)}</content>\n</root>`;
+            // Convert HTML content to XML content
+            const xmlContent = `<?xml version="1.0" encoding="UTF-8"?>\n<root>\n    <content>${convertHtmlToXml(htmlContent)}</content>\n</root>`;
 
             // Create a Blob from the XML content
             const blob = new Blob([xmlContent], { type: 'application/xml' });
@@ -97,17 +134,57 @@
             URL.revokeObjectURL(link.href);
         });
 
-        // Escape XML special characters
-        function escapeXml(unsafe) {
-            return unsafe.replace(/[<>&'"']/g, function (c) {
-                switch (c) {
-                    case '<': return '&lt;';
-                    case '>': return '&gt;';
-                    case '&': return '&amp;';
-                    case '"': return '&quot;';
-                    case "'": return '&apos;';
+        // Convert HTML to XML-compatible format
+        function convertHtmlToXml(html) {
+            let xml = html;
+
+            // Convert HTML tags to XML-compatible tags
+            xml = xml.replace(/<b>/g, "<bold>").replace(/<\/b>/g, "</bold>");
+            xml = xml.replace(/<i>/g, "<italic>").replace(/<\/i>/g, "</italic>");
+            xml = xml.replace(/<u>/g, "<underline>").replace(/<\/u>/g, "</underline>");
+            xml = xml.replace(/<ul>/g, "<unordered-list>").replace(/<\/ul>/g, "</unordered-list>");
+            xml = xml.replace(/<ol>/g, "<ordered-list>").replace(/<\/ol>/g, "</ordered-list>");
+            xml = xml.replace(/<li>/g, "<list-item>").replace(/<\/li>/g, "</list-item>");
+            xml = xml.replace(/<table>/g, "<table>").replace(/<\/table>/g, "</table>");
+            xml = xml.replace(/<tr>/g, "<table-row>").replace(/<\/tr>/g, "</table-row>");
+            xml = xml.replace(/<td>/g, "<table-cell>").replace(/<\/td>/g, "</table-cell>");
+
+            // Return the XML string
+            return xml;
+        }
+
+        // Function to change text color
+        function changeTextColor(event) {
+            const color = event.target.value;
+            document.execCommand('foreColor', false, color);
+        }
+
+        // Insert Table Function
+        function insertTable() {
+            const rows = prompt('Enter number of rows:');
+            const cols = prompt('Enter number of columns:');
+
+            if (rows && cols) {
+                const table = document.createElement('table');
+                table.style.border = '1px solid #00796b';
+                table.style.borderCollapse = 'collapse';
+                table.style.width = '100%';
+                
+                for (let i = 0; i < rows; i++) {
+                    const tr = document.createElement('tr');
+                    for (let j = 0; j < cols; j++) {
+                        const td = document.createElement('td');
+                        td.style.border = '1px solid #00796b';
+                        td.style.padding = '8px';
+                        td.contentEditable = true;
+                        tr.appendChild(td);
+                    }
+                    table.appendChild(tr);
                 }
-            });
+
+                const editor = document.getElementById('editor');
+                editor.appendChild(table);
+            }
         }
 
         // Add a console log for no reason
